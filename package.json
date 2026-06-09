@@ -1,0 +1,19 @@
+{
+  "name": "workflow-monorepo",
+  "version": "1.0.0",
+  "description": "Internal Workflow Management System",
+  "private": true,
+  "scripts": {
+    "dev:frontend": "npm run dev --prefix apps/frontend",
+    "dev:backend": "npm run start:dev --prefix apps/backend",
+    "dev": "concurrently -n \"next,nest\" -c \"blue,green\" \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "prisma:generate": "npm run prisma:generate --prefix apps/backend",
+    "prisma:migrate": "npx prisma migrate dev --schema apps/backend/prisma/schema.prisma",
+    "prisma:studio": "npx prisma studio --schema apps/backend/prisma/schema.prisma"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

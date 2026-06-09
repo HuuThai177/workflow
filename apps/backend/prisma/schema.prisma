@@ -1,0 +1,103 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  EMPLOYEE
+}
+
+enum InstanceStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum StepAction {
+  SUBMIT
+  APPROVE
+  REJECT
+  CANCEL
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(EMPLOYEE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  createdWorkflows   Workflow[]         @relation("WorkflowCreator")
+  assignedSteps      WorkflowStep[]     @relation("StepAssignee")
+  submittedInstances WorkflowInstance[] @relation("InstanceRequester")
+  actions            WorkflowLog[]      @relation("LogActor")
+}
+
+model Workflow {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  creatorId   String
+  creator     User     @relation("WorkflowCreator", fields: [creatorId], references: [id])
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  steps     WorkflowStep[]
+  instances WorkflowInstance[]
+}
+
+model WorkflowStep {
+  id         String   @id @default(uuid())
+  workflowId String
+  workflow   Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  name       String
+  stepOrder  Int
+  assigneeId String?
+  assignee   User?    @relation("StepAssignee", fields: [assigneeId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  logs WorkflowLog[]
+}
+
+model WorkflowInstance {
+  id            String         @id @default(uuid())
+  workflowId    String
+  workflow      Workflow       @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  title         String
+  requesterId   String
+  requester     User           @relation("InstanceRequester", fields: [requesterId], references: [id])
+  status        InstanceStatus @default(PENDING)
+  currentStepId String?
+  data          Json           // dynamic JSON content for form fields (e.g., date, reason, amount)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  logs          WorkflowLog[]
+}
+
+model WorkflowLog {
+  id         String           @id @default(uuid())
+  instanceId String
+  instance   WorkflowInstance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  stepId     String?
+  step       WorkflowStep?    @relation(fields: [stepId], references: [id], onDelete: SetNull)
+  actorId    String
+  actor      User             @relation("LogActor", fields: [actorId], references: [id])
+  action     StepAction
+  comment    String?
+  createdAt  DateTime         @default(now())
+}
