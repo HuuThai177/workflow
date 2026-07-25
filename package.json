@@ -6,7 +6,8 @@
   "scripts": {
     "dev:frontend": "npm run dev --prefix apps/frontend",
     "dev:backend": "npm run start:dev --prefix apps/backend",
-    "dev": "concurrently -n \"next,nest\" -c \"blue,green\" \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "dev": "docker compose up -d && concurrently -n \"next,nest\" -c \"blue,green\" \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "start": "npm run dev",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
     "prisma:generate": "npm run prisma:generate --prefix apps/backend",
